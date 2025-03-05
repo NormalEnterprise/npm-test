@@ -1,0 +1,58 @@
+name: Update Package Lock File
+
+on:
+  pull_request:
+    types: [opened, labeled, synchronize]
+
+jobs:
+  update-lockfile:
+    if: contains(github.event.pull_request.labels.*.name, 'Wiz-remediation')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Update lockfile
+        run: |
+          # Extract the directory path from PR description
+          DIR_PATH=$(echo "${{ github.event.pull_request.body }}" | grep -o '/[^[:space:]]*package.json' | sed 's|/package.json$||')
+          
+          if [ -n "$DIR_PATH" ]; then
+            cd "$DIR_PATH"
+            npm install --package-lock-only
+            
+            # Check if there are changes to commit
+            if git diff --quiet package-lock.json; then
+              echo "No changes to package-lock.json"
+              exit 0
+            fi
+            
+            # Configure Git
+            git config --global user.name "GitHub Actions Bot"
+            git config --global user.email "actions@github.com"
+            
+            # Commit and push changes
+            git add package-lock.json
+            git commit -m "chore: update package-lock.json for security fixes"
+            git push
+
+            # Add comment to PR
+            gh pr comment "${{ github.event.pull_request.number }}" --body "✅ Successfully updated package-lock.json with the latest security fixes."
+          else
+            echo "Could not find package.json path in PR description"
+            exit 1
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
