@@ -43,7 +43,7 @@
     },
     "dependencies": {
       "chalk": "3.0.0",
-      "debug": "4.1.1",
+      "debug": "4.3.1",
       "enquirer": "^2.3.4",
       "is-url-superb": "^3.0.0",
       "lighthouse": "6.0.0",
@@ -74,7 +74,7 @@
       "lockfile-lint": "^3.0.9",
       "open-cli": "^5.0.0",
       "prettier": "^1.19.1",
-      "semantic-release": "^17.0.1"
+      "semantic-release": "19.0.3"
     },
     "jest": {
       "testEnvironment": "node",
